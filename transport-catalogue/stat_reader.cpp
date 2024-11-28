@@ -57,4 +57,15 @@ void ParseAndPrintStat(const Catalogue& transport_catalogue, std::string_view re
     }
 }
 
+void ReadAndProcessStats(std::istream& input, std::ostream& output, const Catalogue& catalogue) {
+    int stat_request_count;
+    input >> stat_request_count >> std::ws;
+
+    for (int i = 0; i < stat_request_count; ++i) {
+        std::string line;
+        std::getline(input, line);
+        ParseAndPrintStat(catalogue, line, output);
+    }
+}
+
 } // end namespace transport::detail::stat

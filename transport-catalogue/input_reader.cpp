@@ -141,4 +141,16 @@ void Reader::ApplyCommands(Catalogue& catalogue) const {
       }
 }
 
+void Reader::ReadAndApplyCommands(std::istream& in, Catalogue& catalogue) {
+    int base_request_count;
+    in >> base_request_count >> std::ws; // ws игнорирует пробельные символы
+
+    for (int i = 0; i < base_request_count; ++i) {
+        std::string line;
+        std::getline(in, line);
+        ParseLine(line);
+    }
+    ApplyCommands(catalogue);
+}
+
 } // end namespace transport::detail::input

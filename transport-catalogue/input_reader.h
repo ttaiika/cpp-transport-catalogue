@@ -38,6 +38,11 @@ public:
      */
     void ApplyCommands(Catalogue& catalogue) const;
 
+    /*
+     * Читает команды из потока и применяет их к каталогу
+     */
+    void ReadAndApplyCommands(std::istream& in, Catalogue& catalogue);
+
 private:
     std::vector<CommandDescription> commands_;
 };

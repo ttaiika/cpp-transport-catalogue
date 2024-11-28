@@ -13,4 +13,6 @@ std::pair<std::string_view, std::string_view> ParseRequest(std::string_view stri
 void ParseAndPrintStat(const Catalogue& tansport_catalogue, std::string_view request,
     std::ostream& output);
 
+void ReadAndProcessStats(std::istream& input, std::ostream& output, const Catalogue& catalogue);
+
 } // end namespace transport::detail::stat
