@@ -20,6 +20,7 @@ struct Stop {
 
     std::string name;
     geo::Coordinates coordinates;
+    std::unordered_map<std::string, double> distances; // Хранит расстояния до соседних остановок
 };
 
 namespace bus {
@@ -37,6 +38,7 @@ struct Info {
     size_t total_stops{};
     size_t unique_stops{};
     double route_length{};
+    double curvature{};
 };
 
 struct PtrComparator {
@@ -58,12 +60,14 @@ class Catalogue {
 public:
     void AddStop(detail::Stop stop);
     void AddBus(detail::bus::Bus bus);
+
     detail::Stop* FindStop(std::string_view name) const;
     detail::bus::Bus* FindBus(std::string_view name) const;
     detail::bus::Info GetBusInfo(detail::bus::Bus* bus) const;
 
     const std::set<detail::bus::Bus*, detail::bus::PtrComparator>& GetBusesByStop(std::string_view name) const;
     double GetDistance(detail::Stop* a, detail::Stop* b) const;
+    void SetDistance(const std::pair<detail::Stop*, detail::Stop*>& stops, double distance);
 
 private:
     std::deque<detail::bus::Bus> buses_;
@@ -73,6 +77,7 @@ private:
 
     std::unordered_map<std::string_view, std::set<detail::bus::Bus*, detail::bus::PtrComparator>> stop_to_buses_; // Остановка и автобусы, проезжающие через нее
     std::unordered_map<detail::bus::Bus*, detail::bus::Info, detail::Hasher> bus_to_info_; // Информация о каждом автобусе
+
     std::unordered_map<std::pair<detail::Stop*, detail::Stop*>, double, detail::Hasher> distances_between_stops_; // Расстояние между двумя остановками
 };
 

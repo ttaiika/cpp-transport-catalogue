@@ -76,9 +76,16 @@ void Catalogue::AddBus(detail::bus::Bus bus) {
         }
     }
 
+    double bus_length = 0;
+    // Рассчёт длины маршрута по заданным пользователем значениям
+    for (size_t i = 0; i < route.size() - 1; ++i) {
+        bus_length += GetDistance(route[i], route[i + 1]);
+    }
+
     info.total_stops = route.size();
     info.unique_stops = unique_stops.size();
-    info.route_length = route_length;
+    info.route_length = bus_length;
+    info.curvature = bus_length / route_length;
 
     // Добавление автобуса и информации о нем 
     bus_to_info_[&ref] = info;
@@ -98,6 +105,10 @@ double Catalogue::GetDistance(detail::Stop* a, detail::Stop* b) const {
     }
 
     return it->second;
+}
+    
+void Catalogue::SetDistance(const std::pair<detail::Stop*, detail::Stop*>& stops, double distance) {
+    distances_between_stops_[stops] = distance;
 }
 
 detail::Stop* Catalogue::FindStop(const std::string_view name) const {

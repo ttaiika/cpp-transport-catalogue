@@ -29,7 +29,8 @@ void ParseAndPrintStat(const Catalogue& transport_catalogue, std::string_view re
             output << "Bus " << bus->name << ": "
                 << info.total_stops << " stops on route, "
                 << info.unique_stops << " unique stops, "
-                << std::fixed << std::setprecision(6) << info.route_length << " route length"
+                << info.route_length << " route length, "
+                << std::fixed << std::setprecision(6) << info.curvature << " curvature"
                 << std::endl;
         }
         else {
@@ -39,7 +40,7 @@ void ParseAndPrintStat(const Catalogue& transport_catalogue, std::string_view re
     else {
         Stop* stop = transport_catalogue.FindStop(name);
         if (stop) {
-            auto buses = transport_catalogue.GetBusesByStop(stop->name);
+            const auto& buses = transport_catalogue.GetBusesByStop(stop->name);
             if (!buses.empty()) {
                 output << "Stop " << stop->name << ": buses";
                 for (const auto& bus_name : buses) {
