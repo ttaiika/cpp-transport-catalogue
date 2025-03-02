@@ -1,47 +1,6 @@
 #include "transport_catalogue.h"
 
 namespace transport {
-namespace detail {
-
-Stop::Stop(std::string stop_name, double latitude, double longitude)
-    : name(std::move(stop_name)), coordinates({ latitude, longitude }) {}
-
-namespace bus {
-
-Bus::Bus(std::string bus_name, std::vector<Stop*> bus_stops) : name(std::move(bus_name)),
-    stops(std::move(bus_stops)) {}
-
-bool Bus::operator<(Bus& other)
-{
-    return std::lexicographical_compare(name.begin(), name.end(),
-        other.name.begin(), other.name.end());
-}
-
-bool PtrComparator::operator()(Bus* lhs, Bus* rhs) const {
-    return *lhs < *rhs;
-}
-
-} //end namespace bus
-
-size_t Hasher::operator()(const std::string_view& str) const {
-    return std::hash<std::string>()(std::string(str));
-}
-
-size_t Hasher::operator()(const std::pair<Stop*, Stop*>& stops) const {
-    size_t hash1 = std::hash<Stop*>()(stops.first);
-    size_t hash2 = std::hash<Stop*>()(stops.second);
-    return hash1 ^ (hash2 << 1); // XOR для комбинирования хешей
-}
-
-size_t Hasher::operator()(const bus::Bus* bus) const {
-    return std::hash<std::string_view>()(bus->name);
-}
-
-size_t Hasher::operator()(const Stop* stop) const {
-    return std::hash<std::string_view>()(stop->name);
-}
-
-} // end namespace detail
 
 void Catalogue::AddStop(detail::Stop stop) {
      auto& ref = stops_.emplace_back(std::move(stop.name), stop.coordinates.lat, stop.coordinates.lng);
@@ -50,10 +9,10 @@ void Catalogue::AddStop(detail::Stop stop) {
 
 void Catalogue::AddBus(detail::bus::Bus bus) {
     // Помещение оригинала автобуса в список (постоянное хранилище)
-    auto& ref = buses_.emplace_back(std::move(bus.name), bus.stops);
+    auto& ref = buses_.emplace_back(std::move(bus.name), bus.stops, bus.final_stops, bus.is_roundtrip);
 
     // Добавление текущего автобуса ко всем остановкам, через которые он проезжает
-    for (const auto& stop : bus.stops) {
+    for (const auto stop : bus.stops) {
         stop_to_buses_[stop->name].insert(&ref);
     }
 
@@ -61,34 +20,36 @@ void Catalogue::AddBus(detail::bus::Bus bus) {
     busname_to_bus_[ref.name] = &ref;
 
     detail::bus::Info info;
-    double route_length = 0.0;
-    std::vector<detail::Stop*>& route = ref.stops;
+    double fact_route_length = 0.0;
+    double line_route_length = 0.0;
+    std::vector<detail::Stop*>& route = bus.stops;
 
     // Уникальные остановки
     std::unordered_set<detail::Stop*> unique_stops(route.begin(), route.end());
 
     // Расчёт длины маршрута по координатам
-    for (size_t i = 0; i < route.size(); ++i) {
-        const auto& current_stop = route[i];
-        const auto& next_stop = route[(i + 1) % route.size()]; 
-        if (i < route.size() - 1 || route.size() != 2) {
-            route_length += ComputeDistance(current_stop->coordinates, next_stop->coordinates);
-        }
+    for (size_t i = 0; i < route.size() - 1; ++i) {
+        geo::Coordinates first = {(*route[i]).coordinates.lat, (*route[i]). coordinates.lng};
+        geo::Coordinates second = {(*route[i + 1]).coordinates.lat, (*route[i+ 1]).coordinates.lng};
+        line_route_length += ComputeDistance(first, second);
     }
 
-    double bus_length = 0;
     // Рассчёт длины маршрута по заданным пользователем значениям
     for (size_t i = 0; i < route.size() - 1; ++i) {
-        bus_length += GetDistance(route[i], route[i + 1]);
+        fact_route_length += GetDistance(route[i], route[i + 1]);
     }
 
     info.total_stops = route.size();
     info.unique_stops = unique_stops.size();
-    info.route_length = bus_length;
-    info.curvature = bus_length / route_length;
+    info.route_length = fact_route_length;
+    info.curvature = fact_route_length / line_route_length;
 
     // Добавление автобуса и информации о нем 
     bus_to_info_[&ref] = info;
+}
+
+const std::deque<detail::bus::Bus>& Catalogue::GetBuses() const {
+    return buses_;
 }
 
 // Получает расстояние между двумя остановками

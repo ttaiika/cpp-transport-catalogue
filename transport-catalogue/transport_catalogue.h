@@ -1,60 +1,15 @@
 #pragma once
 
 #include <deque>
-#include <string>
-#include <vector>
 #include <iomanip>
 #include <iostream>
 #include <unordered_set>
 #include <unordered_map>
 #include <set>
 
-#include "geo.h"
+#include "domain.h"
 
 namespace transport {
-namespace detail {
-
-struct Stop {
-    Stop() = default;
-    Stop(std::string stop_name, double latitude, double longitude);
-
-    std::string name;
-    geo::Coordinates coordinates;
-    std::unordered_map<std::string, double> distances; // Хранит расстояния до соседних остановок
-};
-
-namespace bus {
-
-struct Bus {
-    Bus() = default;
-    Bus(std::string bus_name, std::vector<Stop*> bus_stops);
-    bool operator<(Bus& other);
-
-    std::string name;
-    std::vector<Stop*> stops; 
-};
-
-struct Info {
-    size_t total_stops{};
-    size_t unique_stops{};
-    double route_length{};
-    double curvature{};
-};
-
-struct PtrComparator {
-    bool operator()(Bus* lhs, Bus* rhs) const;
-};
-
-} //end namespace bus
-
-struct Hasher {
-    size_t operator()(const std::string_view& str) const;
-    size_t operator()(const std::pair<Stop*, Stop*>& stops) const;
-    size_t operator()(const bus::Bus* bus) const;
-    size_t operator()(const Stop* stop) const;
-};
-
-} // end namespace detail
 
 class Catalogue {
 public:
@@ -66,6 +21,7 @@ public:
     detail::bus::Info GetBusInfo(detail::bus::Bus* bus) const;
 
     const std::set<detail::bus::Bus*, detail::bus::PtrComparator>& GetBusesByStop(std::string_view name) const;
+    const std::deque<detail::bus::Bus>& GetBuses() const;
     double GetDistance(detail::Stop* a, detail::Stop* b) const;
     void SetDistance(const std::pair<detail::Stop*, detail::Stop*>& stops, double distance);
 
@@ -74,11 +30,12 @@ private:
     std::deque<detail::Stop> stops_;
     std::unordered_map<std::string_view, detail::bus::Bus*, detail::Hasher> busname_to_bus_;
     std::unordered_map<std::string_view, detail::Stop*, detail::Hasher> stopname_to_stop_;
-
-    std::unordered_map<std::string_view, std::set<detail::bus::Bus*, detail::bus::PtrComparator>> stop_to_buses_; // Остановка и автобусы, проезжающие через нее
-    std::unordered_map<detail::bus::Bus*, detail::bus::Info, detail::Hasher> bus_to_info_; // Информация о каждом автобусе
-
-    std::unordered_map<std::pair<detail::Stop*, detail::Stop*>, double, detail::Hasher> distances_between_stops_; // Расстояние между двумя остановками
+    // Остановка и автобусы, проезжающие через нее
+    std::unordered_map<std::string_view, std::set<detail::bus::Bus*, detail::bus::PtrComparator>> stop_to_buses_; 
+    // Информация о каждом автобусе
+    std::unordered_map<detail::bus::Bus*, detail::bus::Info, detail::Hasher> bus_to_info_; 
+    // Расстояние между двумя остановками
+    std::unordered_map<std::pair<detail::Stop*, detail::Stop*>, double, detail::Hasher> distances_between_stops_; 
 };
 
 } // end namespace transport
