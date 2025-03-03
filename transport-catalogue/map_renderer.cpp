@@ -13,7 +13,7 @@ const svg::Color& MapRenderer::GetBusLineColor(size_t index) const {
     return !palette.empty() ? palette[index % palette.size()] : default_color;
 }
 
-MapRenderer::MapRenderer(RenderSettings render_settings, std::vector<transport::detail::bus::Bus*> buses)
+MapRenderer::MapRenderer(const RenderSettings& render_settings, const std::vector<transport::detail::bus::Bus*>& buses)
     : render_settings_(std::move(render_settings))
     , buses_(std::move(buses)) {
     std::sort(buses_.begin(), buses_.end(), [](transport::detail::bus::Bus* lhs, transport::detail::bus::Bus* rhs) {

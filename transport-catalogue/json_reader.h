@@ -7,21 +7,29 @@
 #include <algorithm>
 
 namespace transport {
-namespace filler {
+
+class JSONReader {
+public:
+	JSONReader(Catalogue& catalogue);
+
 	// Строит базу данных автобусных маршрутов
-	void FillDataBase(Catalogue& catalogue, json::Array& data); 
-
-} // namespace filler
-
-namespace renderer {
+	void FillDataBase(json::Array& data); 
 	// Заполняет настройки визуализации карты
-	map_renderer::RenderSettings ReadRenderSettings(const json::Dict& data);
-
-} // namespace renderer
-
-namespace printer {
+	void ReadRenderSettings(const json::Dict& data);
 	// Обрабатывает запросы и выводит результаты на экран
-	void ProcessQueries(Catalogue& catalogue, json::Array& data, map_renderer::RenderSettings render_setting, std::ostream& out);
+	void ProcessQueries(json::Array& data, std::ostream& out) const;
 
-} // namespace printer
+private:
+	void AddStopsToDataBase(json::Array& data, std::map<std::string, json::Dict>& distances);
+	void AddDistancesToDataBase(std::map<std::string, json::Dict>& distances);
+	void AddRoutesToDataBase(json::Array& data);
+
+	json::Dict PrintStops(const std::string& name) const;
+	json::Dict PrintBuses(const std::string& name) const;
+	json::Dict PrintMap() const;
+
+	Catalogue catalogue_;
+	map_renderer::RenderSettings render_settings_;
+};
+
 } // end namespace transport

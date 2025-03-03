@@ -54,7 +54,7 @@ private:
 class MapRenderer {
 public:
     MapRenderer() = default;
-    MapRenderer(RenderSettings render_settings, std::vector<transport::detail::bus::Bus*> buses);
+    MapRenderer(const RenderSettings& render_settings, const std::vector<transport::detail::bus::Bus*>& buses);
 
     void Render(std::ostream& out) const;
 private:
