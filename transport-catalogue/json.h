@@ -22,6 +22,11 @@ public:
     using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
 
     Node() = default;
+
+    explicit Node(Value value) 
+    : value_(std::move(value)) {
+    }
+
     Node(std::nullptr_t)
         : value_(nullptr) {
     }
@@ -109,12 +114,12 @@ public:
         return std::get<std::string>(value_);
     }
 
-    bool IsMap() const {
+    bool IsDict() const {
         return std::holds_alternative<Dict>(value_);
     }
-    const Dict& AsMap() const {
+    const Dict& AsDict() const {
         using namespace std::literals;
-        if (!IsMap()) {
+        if (!IsDict()) {
             throw std::logic_error("Not a map"s);
         }
 

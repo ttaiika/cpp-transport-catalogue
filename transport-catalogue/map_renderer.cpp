@@ -20,7 +20,7 @@ MapRenderer::MapRenderer(const RenderSettings& render_settings, const std::vecto
         return lhs->name < rhs->name;
         });
 
-    //заполняем мн-во всеми остановками
+    // заполняет мн-во всеми остановками
     std::unordered_set<transport::detail::Stop*> stops;
     for (const auto& bus : buses_) {
         stops.insert(bus->stops.begin(), bus->stops.end());
@@ -41,6 +41,7 @@ MapRenderer::MapRenderer(const RenderSettings& render_settings, const std::vecto
     }
 
 }
+
 bool MapRenderer::LexicCompareByName::operator()(transport::detail::Stop* lhs, transport::detail::Stop* rhs) const {
     return lhs->name < rhs->name;
 }
@@ -69,7 +70,6 @@ void MapRenderer::DrawBuses(svg::Document& doc) const {
         doc.Add(std::move(polyline));
     }
 }
-
 
 void MapRenderer::DrawBusesNames(svg::Document& doc) const {
     using namespace std::string_literals;
@@ -100,7 +100,6 @@ void MapRenderer::DrawBusesNames(svg::Document& doc) const {
             .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND));
 
         doc.Add(svg::Text{ base }.SetFillColor(bus_color));
-
 
         //2 конечная остановка
         if (!bus->is_roundtrip && stop != bus->final_stops.back()) {

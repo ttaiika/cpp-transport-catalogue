@@ -12,14 +12,14 @@ void JSONReader::AddStopsToDataBase(json::Array& data, std::map<std::string, jso
 	using namespace std::string_literals;
 
 	for (const json::Node& node : data) {
-		json::Dict req_map = node.AsMap();
+		json::Dict req_map = node.AsDict();
 		std::string req_type = req_map.at("type"s).AsString();
 
 		if (req_type == "Stop"s) {
 			std::string name = req_map.at("name"s).AsString();
 			double latitude = req_map.at("latitude"s).AsDouble();
 			double longitude = req_map.at("longitude"s).AsDouble();
-			distances[name] = req_map.at("road_distances"s).AsMap();
+			distances[name] = req_map.at("road_distances"s).AsDict();
 
 			catalogue_.AddStop({ name, latitude, longitude });
 		}
@@ -41,7 +41,7 @@ void JSONReader::AddRoutesToDataBase(json::Array& data) {
 	using namespace std::string_literals;
 
 	for (const json::Node& node : data) {
-		json::Dict req_map = node.AsMap();
+		json::Dict req_map = node.AsDict();
 		std::string req_type = req_map.at("type"s).AsString();
 
 		if (req_type == "Bus"s) {
@@ -192,36 +192,49 @@ json::Dict JSONReader::PrintMap() const {
 	return result;
 }
 
-// Обрабатывает запросы и выводит результаты на экран 
 void JSONReader::ProcessQueries(json::Array& data, std::ostream& out) const {
-	using namespace std::string_literals;
+    using namespace std::string_literals;
 
-	json::Array result_json;
+    json::Array result_json;
 
-	// Обработка массива запросов
-	for (const json::Node& request : data) {
-		json::Dict response;
+    for (const json::Node& request : data) {
+        auto map_req = request.AsDict();
+        int request_id = map_req.at("id"s).AsInt();
+        std::string type = map_req.at("type"s).AsString();
 
-		auto map_req = request.AsMap();
-		std::string type = map_req.at("type").AsString();
-		std::string name;
+        json::Builder builder;
+        builder.StartDict().Key("request_id").Value(request_id);
 
-		response["request_id"s] = map_req.at("id"s).AsInt();
+        if (type == "Stop"s) {
+            std::string name = map_req.at("name"s).AsString();
+            json::Dict stop_info = PrintStops(name);
 
-		if (type == "Stop"s) {
-			name = map_req.at("name"s).AsString();
-			response.merge(PrintStops(name));
-		}
-		else if (type == "Bus"s) {
-			name = map_req.at("name"s).AsString();
-			response.merge(PrintBuses(name));
-		}
-		else if (type == "Map"s) {
-			response.merge(PrintMap());
-		}
-		result_json.push_back(response);
-	}
-	json::Print(json::Document(result_json), out);
+            if (stop_info.count("error_message"s)) {
+                builder.Key("error_message").Value("not found"s);
+            } else {
+                builder.Key("buses").Value(stop_info.at("buses").AsArray());
+            }
+        } 
+        else if (type == "Bus"s) {
+            std::string name = map_req.at("name"s).AsString();
+            json::Dict bus_info = PrintBuses(name);
+
+            if (bus_info.count("error_message"s)) {
+                builder.Key("error_message").Value("not found"s);
+            } else {
+                builder.Key("curvature").Value(bus_info.at("curvature").AsDouble())
+                       .Key("route_length").Value(bus_info.at("route_length").AsDouble())
+                       .Key("stop_count").Value(bus_info.at("stop_count").AsInt())
+                       .Key("unique_stop_count").Value(bus_info.at("unique_stop_count").AsInt());
+            }
+        } 
+        else if (type == "Map"s) {
+            builder.Key("map").Value(PrintMap().at("map").AsString());
+        }
+		result_json.push_back(json::Node(json::Dict(builder.EndDict().Build().AsDict())));
+    }
+
+    json::Print(json::Document(result_json), out);
 }
 
 } // end namespace transport
