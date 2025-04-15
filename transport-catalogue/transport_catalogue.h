@@ -22,6 +22,7 @@ public:
 
     const std::set<detail::bus::Bus*, detail::bus::PtrComparator>& GetBusesByStop(std::string_view name) const;
     const std::deque<detail::bus::Bus>& GetBuses() const;
+    const std::deque<detail::Stop>& GetStops() const;
     double GetDistance(detail::Stop* a, detail::Stop* b) const;
     void SetDistance(const std::pair<detail::Stop*, detail::Stop*>& stops, double distance);
 

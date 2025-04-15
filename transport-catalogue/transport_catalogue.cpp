@@ -52,6 +52,10 @@ const std::deque<detail::bus::Bus>& Catalogue::GetBuses() const {
     return buses_;
 }
 
+const std::deque<detail::Stop>& Catalogue::GetStops() const {
+    return stops_;
+}
+
 // Получает расстояние между двумя остановками
 double Catalogue::GetDistance(detail::Stop* a, detail::Stop* b) const {
     // Расстояние от А до Б

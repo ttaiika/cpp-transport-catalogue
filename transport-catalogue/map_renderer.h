@@ -11,7 +11,7 @@
 #include <array>
 #include <map>
 
-namespace map_renderer {
+namespace renderer {
 
 struct RenderSettings {
     double width = 0;
@@ -54,9 +54,10 @@ private:
 class MapRenderer {
 public:
     MapRenderer() = default;
-    MapRenderer(const RenderSettings& render_settings, const std::vector<transport::detail::bus::Bus*>& buses);
+    MapRenderer(RenderSettings render_settings, const std::vector<transport::detail::bus::Bus*>& buses);
 
     void Render(std::ostream& out) const;
+
 private:
     const svg::Color& GetBusLineColor(size_t index) const;
 
@@ -87,4 +88,4 @@ MapRenderer RenderMap(Iterator begin, Iterator end, RenderSettings settings_) {
     return { settings_, std::move(buses) };
 }
 
-} // end namespace map_renderer
+} // end namespace renderer
